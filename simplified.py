@@ -3,6 +3,7 @@ import time
 
 
 # settings
+FPS = 30
 HEIGHT = 32
 WIDTH = 64
 
@@ -11,7 +12,7 @@ TILES_MAP = {
     'flame': '~',
     'block': '+',
     'player': 'o',
-    'bomb': 'x'
+    'bomb': 'x',
 }
 
 
@@ -27,30 +28,55 @@ stdscr.nodelay(True)  # set getch() non-blocking
 # override default print() function
 def print(text):
     stdscr.addstr(str(text))
+    stdscr.refresh()
 
 
-class Player(object):
+def clear():
+    stdscr.clear()
+
+
+class MapObject(object):
+
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+
+class Player(MapObject):
+
+    def __init__(self):
+        super().__init__()
+
+        self.x_velocity = 1
+        self.y_velocity = 1
+
+    def move(self, x, y):
+        new_x, new_y = self.x + x, self.y + y
+        # TODO: collision check
+
+        self.x, self.y = new_x, new_y
+
+
+class Flame(MapObject):
     pass
 
 
-class Flame(object):
-    pass
-
-
-class Bomb(object):
+class Bomb(MapObject):
     pass
 
 
 def initialize_board():
-    board = [None]*HEIGHT
+    board = [[] for _ in range(HEIGHT)]
+
     for line in board:
-        line.append([None]*WIDTH)
+        for _ in range(WIDTH):
+            line.append(None)
 
     for y in range(HEIGHT):
-        board[y][0] = board[y][WIDTH] = 'block'
+        board[y][0] = board[y][WIDTH-1] = 'block'
 
     for x in range(WIDTH):
-        board[0][x] = board[HEIGHT][x] = 'block'
+        board[0][x] = board[HEIGHT-1][x] = 'block'
 
     return board
 
@@ -78,27 +104,26 @@ def move():
     pass
 
 
-def handle_keys():
-    pass
-
-
-def sleep(measured_time):
+def handle_keys(game_state):
     pass
 
 
 def run_game_loop(initial_state, board):
     is_finished = False
     game_state = initial_state
+    last_frame_time = 0
 
     while not is_finished:
         current_time = time.time()
 
-        handle_keys()
+        handle_keys(game_state)
         update(game_state, board)
         display(board)
 
-        sleep(current_time)
-
+        sleep_time = 1.0/FPS - (current_time - last_frame_time)
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        last_frame_time = current_time
 
 
 initial_state = {
@@ -107,4 +132,6 @@ initial_state = {
     'flames': [],
 }
 
-run_game_loop()
+board = initialize_board()
+
+run_game_loop(initial_state, board)

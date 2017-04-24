@@ -167,6 +167,7 @@ class Map(object):
 class ConsoleRenderer(object):
 
     EMPTY_TILE = ' '
+    UNKNOWN_TILE = '?'
 
     TILE_MAP = {
         Player.OBJECT_NAME: 'O',
@@ -190,7 +191,7 @@ class ConsoleRenderer(object):
                 tile = tiles[y][x]
 
                 if tile:
-                    output.append(self.TILE_MAP.get(tile[0], self.EMPTY_TILE))
+                    output.append(self.TILE_MAP.get(tile[0], self.UNKNOWN_TILE))
                 else:
                     output.append(self.EMPTY_TILE)
             output.append("\n")
