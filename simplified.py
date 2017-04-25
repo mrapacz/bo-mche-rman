@@ -1,7 +1,6 @@
 import curses
 import time
 
-
 # settings
 FPS = 30
 HEIGHT = 32
@@ -14,7 +13,6 @@ TILES_MAP = {
     'player': 'o',
     'bomb': 'x',
 }
-
 
 # configure terminal
 stdscr = curses.initscr()
@@ -36,14 +34,12 @@ def clear():
 
 
 class MapObject(object):
-
     def __init__(self):
-        self.x = 0
-        self.y = 0
+        self.x = 1
+        self.y = 1
 
 
 class Player(MapObject):
-
     def __init__(self):
         super().__init__()
 
@@ -52,9 +48,26 @@ class Player(MapObject):
 
     def move(self, x, y):
         new_x, new_y = self.x + x, self.y + y
-        # TODO: collision check
+        if not board[new_y][new_x]:
+            board[self.y][self.x] = None
+            self.x, self.y = new_x, new_y
 
-        self.x, self.y = new_x, new_y
+    def move_up(self):
+        self.move(0, -self.y_velocity)
+
+    def move_down(self):
+        self.move(0, self.y_velocity)
+
+    def move_right(self):
+        self.move(self.x_velocity, 0)
+
+    def move_left(self):
+        self.move(-self.x_velocity, 0)
+
+    def plant_bomb(self):
+        bomb = Bomb()
+        bomb.x, bomb.y = self.x, self.y
+        initial_state['bombs'].append(bomb)
 
 
 class Flame(MapObject):
@@ -73,10 +86,10 @@ def initialize_board():
             line.append(None)
 
     for y in range(HEIGHT):
-        board[y][0] = board[y][WIDTH-1] = 'block'
+        board[y][0] = board[y][WIDTH - 1] = 'block'
 
     for x in range(WIDTH):
-        board[0][x] = board[HEIGHT-1][x] = 'block'
+        board[0][x] = board[HEIGHT - 1][x] = 'block'
 
     return board
 
@@ -97,7 +110,11 @@ def display(board):
 
 
 def update(game_state, board):
-    pass
+    for player in game_state['players']:
+        board[player.y][player.x] = 'player'
+
+    for bomb in game_state['bombs']:
+        board[bomb.y][bomb.x] = 'bomb'
 
 
 def move():
@@ -105,7 +122,19 @@ def move():
 
 
 def handle_keys(game_state):
-    pass
+    key_pressed = stdscr.getch()
+    player = game_state['players'][0]
+
+    if key_pressed == curses.KEY_UP:
+        player.move_up()
+    if key_pressed == curses.KEY_DOWN:
+        player.move_down()
+    if key_pressed == curses.KEY_LEFT:
+        player.move_left()
+    if key_pressed == curses.KEY_RIGHT:
+        player.move_right()
+    if key_pressed == ord('x'):
+        player.plant_bomb()
 
 
 def run_game_loop(initial_state, board):
@@ -120,14 +149,14 @@ def run_game_loop(initial_state, board):
         update(game_state, board)
         display(board)
 
-        sleep_time = 1.0/FPS - (current_time - last_frame_time)
+        sleep_time = 1.0 / FPS - (current_time - last_frame_time)
         if sleep_time > 0:
             time.sleep(sleep_time)
         last_frame_time = current_time
 
 
 initial_state = {
-    'players': [],
+    'players': [Player()],
     'bombs': [],
     'flames': [],
 }
